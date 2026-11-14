@@ -1,0 +1,66 @@
+
+name: OfficialCurtyyy Zygisk Native Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.abi }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        abi:
+          - armeabi-v7a
+          - arm64-v8a
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager --install "ndk;27.2.12479018"
+
+      - name: Check source files
+        run: |
+          test -f native/CMakeLists.txt
+          test -f native/app_profiles.h
+          test -f native/app_profiles.cpp
+          test -f native/entry.cpp
+
+      - name: Configure CMake
+        run: |
+          cmake -S native -B "build/${{ matrix.abi }}" \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_SDK_ROOT/ndk/27.2.12479018/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI="${{ matrix.abi }}" \
+            -DANDROID_PLATFORM=android-23 \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compile native library
+        run: |
+          cmake --build "build/${{ matrix.abi }}" --config Release --parallel 2
+
+      - name: Verify output
+        run: |
+          test -f "build/${{ matrix.abi }}/libofficialcurtyyy_profiles.so"
+
+      - name: Upload native library
+        uses: actions/upload-artifact@v4
+        with:
+          name: OfficialCurtyyy-${{ matrix.abi }}
+          path: build/${{ matrix.abi }}/libofficialcurtyyy_profiles.so
+          if-no-files-found: error
+          
