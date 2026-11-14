@@ -1,0 +1,19 @@
+
+#ifndef OFFICIALCURTYYY_APP_PROFILES_H
+#define OFFICIALCURTYYY_APP_PROFILES_H
+
+#include <cstddef>
+#include <string>
+
+namespace OfficialCurtyyyZygisk {
+
+bool isValidProfile(const std::string& profileId);
+bool loadAppProfiles(const std::string& filePath);
+std::string getAppProfile(const std::string& packageName);
+bool hasAppProfile(const std::string& packageName);
+void clearAppProfiles();
+std::size_t getProfileCount();
+
+}
+
+#endif
